@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import financesData from '../../data/finances.yaml';
 
 export async function getStaticPaths() {
   const updates = await getCollection('updates');
@@ -30,6 +31,25 @@ const formatRelative = (amount: number, forcePositive = false) => {
 };
 
 const isPositiveInvestment = update.data.investedMoney >= 0;
+
+// Calculate portfolio performance % from history
+const history = (financesData as any).history as { month: string; amount: number }[];
+const updateMonth = `${update.data.date.getFullYear()}-${String(update.data.date.getMonth() + 1).padStart(2, '0')}`;
+
+// Find this month and previous month in history
+const sortedHistory = [...history].sort((a, b) => b.month.localeCompare(a.month));
+const currentMonthIndex = sortedHistory.findIndex(h => h.month === updateMonth);
+const currentMonthValue = currentMonthIndex >= 0 ? sortedHistory[currentMonthIndex].amount : null;
+const previousMonthValue = currentMonthIndex >= 0 && currentMonthIndex < sortedHistory.length - 1 
+  ? sortedHistory[currentMonthIndex + 1].amount 
+  : null;
+
+let performancePercent: number | null = null;
+if (currentMonthValue !== null && previousMonthValue !== null && previousMonthValue > 0) {
+  performancePercent = ((currentMonthValue - previousMonthValue) / previousMonthValue) * 100;
+}
+
+const isPositivePerformance = performancePercent !== null && performancePercent >= 0;
 ---
 
 <Base title={update.data.title} description={`Monthly update: ${update.data.title}`}>
@@ -51,37 +71,80 @@ const isPositiveInvestment = update.data.investedMoney >= 0;
       
       <h1 class="mt-2 text-4xl md:text-5xl tracking-tight">{update.data.title}</h1>
       
-      <div class="mt-6 flex flex-wrap items-stretch gap-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <div class="space-y-3">
-          <div>
-            <span class="block text-xs text-[var(--color-text-muted)]">Invested Money</span>
+      <div class="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 overflow-hidden">
+        <!-- Performance Badge -->
+        {performancePercent !== null && (
+          <div class="mb-4 pb-4 border-b border-[var(--color-border)] flex items-center justify-between">
+            <span class="text-sm text-[var(--color-text-muted)]">Portfolio Performance</span>
             <span class:list={[
-              "font-mono text-xl font-medium",
-              isPositiveInvestment ? "text-[var(--color-success)]" : "text-red-500"
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-mono font-medium",
+              isPositivePerformance 
+                ? "bg-green-500/10 text-[var(--color-success)]" 
+                : "bg-red-500/10 text-red-500"
             ]}>
-              {formatRelative(update.data.investedMoney)}
+              <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                {isPositivePerformance ? (
+                  <path d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                ) : (
+                  <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                )}
+              </svg>
+              {Math.abs(performancePercent).toFixed(1)}%
             </span>
-          </div>
-          <div>
-            <span class="block text-xs text-[var(--color-text-muted)]">DeFi Income</span>
-            <span class="font-mono text-xl font-medium text-[var(--color-success)]">
-              {formatRelative(update.data.defiIncome, true)}
-            </span>
-          </div>
-        </div>
-        {update.data.highlights.length > 0 && (
-          <div class="flex-1 border-l border-[var(--color-border)] pl-6 flex flex-col justify-start">
-            <span class="block text-xs text-[var(--color-text-muted)] mb-1">Highlights</span>
-            <ul class="space-y-1">
-              {update.data.highlights.map((highlight) => (
-                <li class="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                  <span class="mt-1.5 size-1 shrink-0 rounded-full bg-[var(--color-text)]" />
-                  {highlight}
-                </li>
-              ))}
-            </ul>
           </div>
         )}
+        
+        <!-- Main Stats Grid -->
+        <div class="flex flex-wrap items-start gap-6">
+          <!-- Financial Metrics -->
+          <div class="flex gap-6">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <svg class="size-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Invested</span>
+              </div>
+              <span class:list={[
+                "font-mono text-xl font-medium",
+                isPositiveInvestment ? "text-[var(--color-success)]" : "text-red-500"
+              ]}>
+                {formatRelative(update.data.investedMoney)}
+              </span>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <svg class="size-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">DeFi Income</span>
+              </div>
+              <span class="font-mono text-xl font-medium text-[var(--color-success)]">
+                {formatRelative(update.data.defiIncome, true)}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Highlights -->
+          {update.data.highlights.length > 0 && (
+            <div class="flex-1 min-w-[200px] border-l border-[var(--color-border)] pl-6">
+              <div class="flex items-center gap-1.5 mb-2">
+                <svg class="size-3.5 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Highlights</span>
+              </div>
+              <ul class="space-y-1.5">
+                {update.data.highlights.map((highlight) => (
+                  <li class="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
+                    <span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </header>
 

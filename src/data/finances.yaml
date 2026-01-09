@@ -1,7 +1,44 @@
-currentInvestedMoney: 50000
 currency: "USD"
 goal: 1000000
+
+# Current holdings - prices fetched automatically
+holdings:
+  # Individual major coins
+  - symbol: "ETH"
+    amount: 2.5
+  - symbol: "BTC"
+    amount: 0.15
+  - id: "solana"
+    symbol: "SOL"
+    amount: 25
+
+  # Grouped stablecoins - all valued at $1
+  - group: "STABLES"
+    stablecoin: true
+    tokens:
+      - symbol: "USDC"
+        amount: 3000
+      - symbol: "USDT"
+        amount: 1500
+      - symbol: "DAI"
+        amount: 500
+
+  # Grouped memecoins - fetched and summed together
+  - group: "MEMES"
+    tokens:
+      - contract: "DtR4D9FtVoTX2569gaL837ZgrB6wNjj6tkmnX9Rdk9B2"
+        chain: "solana"
+        symbol: "AURA"
+        amount: 1200000
+      - contract: "0x532f27101965dd16442e59d40670faf5ebb142e4"
+        chain: "base"
+        symbol: "BRETT"
+        amount: 5000
+
+# Historical snapshots (end of month values)
 history:
+  - month: "2026-02"
+    amount: 52585
   - month: "2026-01"
     amount: 50000
   - month: "2025-12"

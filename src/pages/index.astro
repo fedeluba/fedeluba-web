@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import AppCard from '../components/AppCard.astro';
 import UpdateCard from '../components/UpdateCard.astro';
 import InvestedMoneyChart from '../components/InvestedMoneyChart.astro';
+import PortfolioChart from '../components/PortfolioChart.astro';
 
 const allApps = await getCollection('apps');
 const featuredApps = allApps
@@ -23,12 +24,18 @@ const latestUpdate = allUpdates
       Hey, I'm <em>Fede</em>
     </h1>
     <p class="mt-4 text-lg text-[var(--color-text-secondary)] leading-relaxed max-w-lg">
-      I build apps, and invest in crypto & DeFi while documenting my journey toward $1,000,000 invested.
-    </section>
+      I build apps, invest in crypto & DeFi, and document my journey. Sometimes I ship open source tools too.
+    </p>
+  </section>
 
   <!-- Invested Money Section -->
-  <section class="mb-16 animate-fade-in-up" style="animation-delay: 100ms">
+  <section class="mb-8 animate-fade-in-up" style="animation-delay: 100ms">
     <InvestedMoneyChart />
+  </section>
+
+  <!-- Portfolio Distribution Section -->
+  <section class="mb-16 animate-fade-in-up" style="animation-delay: 150ms">
+    <PortfolioChart />
   </section>
 
   <!-- Featured Apps Section -->

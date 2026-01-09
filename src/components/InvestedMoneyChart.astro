@@ -2,22 +2,16 @@
 import financesData from '../data/finances.yaml';
 
 interface FinancesData {
-  currentInvestedMoney: number;
   currency: string;
   goal: number;
+  holdings: any[];
   history: { month: string; amount: number }[];
 }
 
 const finances = financesData as FinancesData;
 
-const progress = Math.min((finances.currentInvestedMoney / finances.goal) * 100, 100);
-
-const formattedCurrent = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: finances.currency,
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-}).format(finances.currentInvestedMoney);
+// Use last historical value as fallback
+const lastHistoricalValue = finances.history[0]?.amount || 0;
 
 const formattedGoal = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -25,38 +19,39 @@ const formattedGoal = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 }).format(finances.goal);
-
-// Calculate recent change
-const previousAmount = finances.history[1]?.amount || finances.currentInvestedMoney;
-const change = finances.currentInvestedMoney - previousAmount;
-const changePercent = ((change / previousAmount) * 100).toFixed(1);
-const isPositive = change >= 0;
 ---
 
 <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
   <div class="flex items-center justify-between">
-    <h3 class="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider">Invested Money</h3>
-    <span class:list={[
-      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono",
-      isPositive ? "bg-green-500/10 text-[var(--color-success)]" : "bg-red-500/10 text-red-500"
-    ]}>
-      {isPositive ? '↑' : '↓'} {Math.abs(Number(changePercent))}%
+    <h3 class="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+      Invested Money
+      <!-- <span id="live-indicator" class="ml-2 inline-flex items-center gap-1 text-xs font-normal normal-case opacity-0 transition-opacity duration-300">
+        <span class="size-1.5 rounded-full bg-[var(--color-success)] animate-pulse"></span>
+        Live
+      </span> -->
+    </h3>
+    <span 
+      id="change-badge"
+      class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono bg-green-500/10 text-[var(--color-success)]"
+    >
+      <span id="change-text">Loading...</span>
     </span>
   </div>
   
-  <p class="mt-2 font-serif text-3xl tracking-tight text-[var(--color-text)]">
-    {formattedCurrent}
+  <p id="total-value" class="mt-2 font-serif text-3xl tracking-tight text-[var(--color-text)]">
+    <span class="inline-block w-32 h-9 bg-[var(--color-bg-secondary)] rounded animate-pulse"></span>
   </p>
   
   <div class="mt-4">
     <div class="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
       <span>Progress to goal</span>
-      <span>{progress.toFixed(1)}%</span>
+      <span id="progress-text">0%</span>
     </div>
     <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--color-bg-secondary)]">
       <div 
-        class="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-success)] animate-grow-width"
-        style={`width: ${progress}%`}
+        id="progress-bar"
+        class="h-full rounded-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-success)] transition-all duration-1000 ease-out"
+        style="width: 0%"
       />
     </div>
     <div class="mt-1.5 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
@@ -64,4 +59,84 @@ const isPositive = change >= 0;
       <span>Goal: {formattedGoal}</span>
     </div>
   </div>
+  
+  <p id="last-updated" class="mt-3 text-xs text-[var(--color-text-muted)] opacity-0 transition-opacity duration-300"></p>
 </div>
+
+<script is:inline define:vars={{ goal: finances.goal, lastHistoricalValue, currency: finances.currency }}>
+  async function fetchPortfolio() {
+    try {
+      const response = await fetch('/api/portfolio');
+      if (!response.ok) throw new Error('Failed to fetch');
+      return await response.json();
+    } catch (error) {
+      console.error('Portfolio fetch error:', error);
+      return null;
+    }
+  }
+  
+  function formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+  
+  async function updateChart() {
+    const data = await fetchPortfolio();
+    
+    const totalValueEl = document.getElementById('total-value');
+    const changeBadge = document.getElementById('change-badge');
+    const changeText = document.getElementById('change-text');
+    const progressText = document.getElementById('progress-text');
+    const progressBar = document.getElementById('progress-bar');
+    const lastUpdatedEl = document.getElementById('last-updated');
+    const liveIndicator = document.getElementById('live-indicator');
+    
+    if (data && data.totalValue !== undefined) {
+      const totalValue = data.totalValue;
+      const progress = Math.min((totalValue / goal) * 100, 100);
+      
+      // Calculate change from last historical value
+      const change = totalValue - lastHistoricalValue;
+      const changePercent = lastHistoricalValue > 0 ? ((change / lastHistoricalValue) * 100).toFixed(1) : 0;
+      const isPositive = change >= 0;
+      
+      // Update total value
+      totalValueEl.textContent = formatCurrency(totalValue);
+      
+      // Update change badge
+      changeBadge.className = `inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono ${isPositive ? 'bg-green-500/10 text-[var(--color-success)]' : 'bg-red-500/10 text-red-500'}`;
+      changeText.textContent = `${isPositive ? '↑' : '↓'} ${Math.abs(changePercent)}%`;
+      
+      // Update progress
+      progressText.textContent = `${progress.toFixed(1)}%`;
+      progressBar.style.width = `${progress}%`;
+      
+      // Update last updated
+      const lastUpdated = new Date(data.lastUpdated);
+      lastUpdatedEl.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}${data.cached ? ' (cached)' : ''}`;
+      lastUpdatedEl.style.opacity = '1';
+      
+      // Show live indicator (if element exists)
+      if (liveIndicator) liveIndicator.style.opacity = '1';
+    } else {
+      // Fallback to historical value
+      totalValueEl.textContent = formatCurrency(lastHistoricalValue);
+      changeText.textContent = 'Offline';
+      changeBadge.className = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-mono bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]';
+      
+      const progress = Math.min((lastHistoricalValue / goal) * 100, 100);
+      progressText.textContent = `${progress.toFixed(1)}%`;
+      progressBar.style.width = `${progress}%`;
+    }
+  }
+  
+  // Fetch on load
+  updateChart();
+  
+  // Re-fetch after view transitions
+  document.addEventListener('astro:after-swap', updateChart);
+</script>
