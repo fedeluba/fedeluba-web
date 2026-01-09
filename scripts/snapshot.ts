@@ -39,6 +39,7 @@ interface SingleHolding {
   chain?: string;
   amount: number;
   stablecoin?: boolean;
+  color?: string;
 }
 
 interface GroupToken {
@@ -52,6 +53,7 @@ interface GroupedHolding {
   group: string;
   stablecoin?: boolean;
   tokens: GroupToken[];
+  color?: string;
 }
 
 type Holding = SingleHolding | GroupedHolding;
@@ -67,6 +69,7 @@ interface PortfolioAsset {
   value: number;
   percentage?: number;
   isGroup?: boolean;
+  color?: string;
 }
 
 interface Snapshot {
@@ -157,7 +160,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
   const coinGeckoHoldings: { holding: SingleHolding; id: string }[] = [];
   const dexscreenerHoldings: { token: GroupToken | SingleHolding }[] = [];
   const stablecoinHoldings: { holding: SingleHolding | GroupedHolding }[] = [];
-  const groupedDexscreener: Map<string, { tokens: GroupToken[]; groupName: string }> = new Map();
+  const groupedDexscreener: Map<string, { tokens: GroupToken[]; groupName: string; color?: string }> = new Map();
   
   for (const holding of holdings) {
     if (isGroupedHolding(holding)) {
@@ -178,7 +181,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
         }
         
         if (dexTokens.length > 0) {
-          groupedDexscreener.set(holding.group, { tokens: dexTokens, groupName: holding.group });
+          groupedDexscreener.set(holding.group, { tokens: dexTokens, groupName: holding.group, color: holding.color });
         }
       }
     } else {
@@ -208,6 +211,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
       amount: holding.amount,
       price,
       value,
+      color: holding.color,
     });
   }
   
@@ -226,7 +230,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
   }
   
   // Process grouped Dexscreener holdings (e.g., MEMES)
-  for (const [groupName, { tokens }] of groupedDexscreener) {
+  for (const [groupName, { tokens, color }] of groupedDexscreener) {
     let totalValue = 0;
     let totalAmount = 0;
     
@@ -244,6 +248,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
       price: totalAmount > 0 ? totalValue / totalAmount : 0,
       value: totalValue,
       isGroup: true,
+      color,
     });
   }
   
@@ -257,6 +262,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
         price: 1,
         value: totalAmount,
         isGroup: true,
+        color: holding.color,
       });
     } else {
       assets.push({
@@ -264,6 +270,7 @@ async function calculatePortfolio(holdings: Holding[]): Promise<{ totalValue: nu
         amount: holding.amount,
         price: 1,
         value: holding.amount,
+        color: holding.color,
       });
     }
   }

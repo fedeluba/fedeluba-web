@@ -11,7 +11,7 @@ const navLinks = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="mb-16 flex items-center justify-between">
+<header class="mb-16 flex items-center justify-between relative">
   <a href="/" class="group flex items-center gap-3 no-underline">
     <div class="relative size-10 overflow-hidden rounded-full ring-2 ring-[var(--color-border)] transition-base group-hover:ring-[var(--color-accent)]">
       <img 
@@ -23,7 +23,8 @@ const currentPath = Astro.url.pathname;
     <span class="font-medium tracking-tight">Fede</span>
   </a>
   
-  <nav class="flex items-center gap-1">
+  <!-- Desktop Navigation -->
+  <nav class="hidden md:flex items-center gap-1">
     {navLinks.map(({ href, label }) => {
       const isActive = currentPath === href || (href !== '/' && currentPath.startsWith(href));
       return (
@@ -43,4 +44,111 @@ const currentPath = Astro.url.pathname;
     <div class="ml-2 h-4 w-px bg-[var(--color-border)]" />
     <ThemeToggle />
   </nav>
+  
+  <!-- Mobile Navigation -->
+  <div class="flex md:hidden items-center gap-2">
+    <ThemeToggle />
+    <button 
+      id="mobile-menu-btn"
+      class="p-2 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] transition-base"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+    >
+      <svg id="menu-icon" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      <svg id="close-icon" class="size-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Mobile Menu Dropdown -->
+  <div 
+    id="mobile-menu"
+    class="absolute top-full right-0 mt-2 w-48 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-lg shadow-black/10 opacity-0 invisible translate-y-[-8px] transition-all duration-200 z-50 md:hidden"
+  >
+    {navLinks.map(({ href, label }) => {
+      const isActive = currentPath === href || (href !== '/' && currentPath.startsWith(href));
+      return (
+        <a 
+          href={href}
+          class:list={[
+            "block px-4 py-2.5 text-sm transition-base no-underline",
+            isActive 
+              ? "bg-[var(--color-bg-secondary)] text-[var(--color-text)]" 
+              : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)]"
+          ]}
+        >
+          {label}
+        </a>
+      );
+    })}
+  </div>
 </header>
+
+<script>
+  function setupMobileMenu() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+    const closeIcon = document.getElementById('close-icon');
+    
+    if (!btn || !menu || !menuIcon || !closeIcon) return;
+    
+    let isOpen = false;
+    
+    function toggleMenu() {
+      isOpen = !isOpen;
+      btn.setAttribute('aria-expanded', isOpen.toString());
+      
+      if (isOpen) {
+        menu.classList.remove('opacity-0', 'invisible', 'translate-y-[-8px]');
+        menu.classList.add('opacity-100', 'visible', 'translate-y-0');
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+      } else {
+        menu.classList.add('opacity-0', 'invisible', 'translate-y-[-8px]');
+        menu.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      }
+    }
+    
+    function closeMenu() {
+      if (isOpen) {
+        isOpen = false;
+        btn.setAttribute('aria-expanded', 'false');
+        menu.classList.add('opacity-0', 'invisible', 'translate-y-[-8px]');
+        menu.classList.remove('opacity-100', 'visible', 'translate-y-0');
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      }
+    }
+    
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+    
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target as Node) && !btn.contains(e.target as Node)) {
+        closeMenu();
+      }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMenu();
+      }
+    });
+  }
+  
+  // Setup on load
+  setupMobileMenu();
+  
+  // Re-setup after view transitions
+  document.addEventListener('astro:after-swap', setupMobileMenu);
+</script>

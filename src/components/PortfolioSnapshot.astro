@@ -8,6 +8,7 @@ interface SnapshotAsset {
   value: number;
   percentage: number;
   isGroup?: boolean;
+  color?: string;
 }
 
 interface Snapshot {
@@ -39,7 +40,7 @@ let valueChange = 0;
 let valueChangePercent = 0;
 let newAssets: string[] = [];
 let removedAssets: string[] = [];
-let allocationChanges: { symbol: string; current: number; previous: number; change: number; value: number; valueChange: number }[] = [];
+let allocationChanges: { symbol: string; current: number; previous: number; change: number; value: number; valueChange: number; color?: string }[] = [];
 
 if (currentSnapshot && previousSnapshot && !isFirstSnapshot) {
   valueChange = currentSnapshot.totalValue - previousSnapshot.totalValue;
@@ -68,6 +69,7 @@ if (currentSnapshot && previousSnapshot && !isFirstSnapshot) {
         change: curr.percentage - prev.percentage,
         value: curr.value,
         valueChange: curr.value - prev.value,
+        color: curr.color,
       };
     })
     .sort((a, b) => b.value - a.value); // Sort by value instead of change
@@ -87,8 +89,8 @@ const formatPercent = (value: number, showSign = false) => {
   return `${sign}${value.toFixed(1)}%`;
 };
 
-// Color palette for chart
-const colors = [
+// Fallback color palette if asset doesn't have a color
+const fallbackColors = [
   '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899',
   '#06b6d4', '#f97316', '#84cc16', '#ef4444', '#6366f1',
 ];
@@ -142,14 +144,16 @@ const colors = [
             <div>
               <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Holdings Breakdown</p>
               <div class="grid gap-4">
-                {allocationChanges.map((item, i) => (
+                {allocationChanges.map((item, i) => {
+                  const itemColor = item.color || fallbackColors[i % fallbackColors.length];
+                  return (
                   <div class="rounded-lg bg-[var(--color-bg)]/50 p-4">
                     <!-- Header row -->
                     <div class="flex items-center justify-between mb-3">
                       <div class="flex items-center gap-2">
                         <span 
                           class="size-3 rounded-full shrink-0" 
-                          style={`background-color: ${colors[i % colors.length]}`}
+                          style={`background-color: ${itemColor}`}
                         />
                         <span class="font-mono text-base font-medium text-[var(--color-text)]">{item.symbol}</span>
                       </div>
@@ -162,7 +166,7 @@ const colors = [
                     <div class="h-2 bg-[var(--color-border)] rounded-full overflow-hidden mb-3">
                       <div 
                         class="h-full rounded-full transition-all duration-500"
-                        style={`width: ${item.current}%; background-color: ${colors[i % colors.length]}`}
+                        style={`width: ${item.current}%; background-color: ${itemColor}`}
                       />
                     </div>
                     
@@ -191,7 +195,8 @@ const colors = [
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -244,14 +249,16 @@ const colors = [
           <div>
             <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Initial Distribution</p>
             <div class="grid gap-4">
-              {currentSnapshot.assets.map((asset, i) => (
+              {currentSnapshot.assets.map((asset, i) => {
+                const assetColor = asset.color || fallbackColors[i % fallbackColors.length];
+                return (
                 <div class="rounded-lg bg-[var(--color-bg)]/50 p-4">
                   <!-- Header row -->
                   <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
                       <span 
                         class="size-3 rounded-full shrink-0" 
-                        style={`background-color: ${colors[i % colors.length]}`}
+                        style={`background-color: ${assetColor}`}
                       />
                       <span class="font-mono text-base font-medium text-[var(--color-text)]">{asset.symbol}</span>
                     </div>
@@ -264,7 +271,7 @@ const colors = [
                   <div class="h-2 bg-[var(--color-border)] rounded-full overflow-hidden mb-3">
                     <div 
                       class="h-full rounded-full transition-all duration-500"
-                      style={`width: ${asset.percentage}%; background-color: ${colors[i % colors.length]}`}
+                      style={`width: ${asset.percentage}%; background-color: ${assetColor}`}
                     />
                   </div>
                   
@@ -274,7 +281,8 @@ const colors = [
                     <span class="font-mono text-[var(--color-text)]">{formatPercent(asset.percentage)}</span>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Fragment>

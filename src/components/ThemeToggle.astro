@@ -2,10 +2,9 @@
 ---
 
 <button
-  id="theme-toggle"
   type="button"
   aria-label="Toggle theme"
-  class="group ml-1 flex size-8 items-center justify-center rounded-md text-[var(--color-text-secondary)] transition-base hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text)]"
+  class="theme-toggle group ml-1 flex size-8 items-center justify-center rounded-md text-[var(--color-text-secondary)] transition-base hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text)]"
 >
   <!-- Sun icon (shown in dark mode) -->
   <svg
@@ -33,11 +32,17 @@
 
 <script>
   function setupThemeToggle() {
-    const toggle = document.getElementById('theme-toggle');
+    const toggles = document.querySelectorAll('.theme-toggle');
     
-    toggle?.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    toggles.forEach(toggle => {
+      // Remove existing listeners by cloning
+      const newToggle = toggle.cloneNode(true);
+      toggle.parentNode?.replaceChild(newToggle, toggle);
+      
+      newToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
     });
   }
 

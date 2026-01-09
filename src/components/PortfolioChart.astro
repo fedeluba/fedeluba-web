@@ -2,59 +2,56 @@
 // Portfolio distribution chart - fetches data client-side
 ---
 
-<div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
-  <h3 class="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
-    Portfolio Distribution
-  </h3>
+<div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+  <!-- Header -->
+  <div class="px-5 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
+    <span class="text-sm text-[var(--color-text-muted)]">Distribution</span>
+    <span id="asset-count-badge" class="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2.5 py-1 rounded-full font-mono">
+      <span id="asset-count">-</span> assets
+    </span>
+  </div>
   
-  <div id="portfolio-chart-container" class="flex items-center gap-6">
-    <!-- Donut Chart -->
-    <div class="relative shrink-0">
-      <svg id="donut-chart" width="120" height="120" viewBox="0 0 120 120" class="transform -rotate-90">
-        <circle
-          cx="60"
-          cy="60"
-          r="50"
-          fill="none"
-          stroke="var(--color-bg-secondary)"
-          stroke-width="16"
-        />
-        <!-- Segments will be added here by JS -->
-      </svg>
-      <div class="absolute inset-0 flex items-center justify-center">
-        <span id="asset-count" class="text-lg font-mono text-[var(--color-text)]">-</span>
+  <div class="p-5">
+    <div id="portfolio-chart-container" class="flex items-center gap-6">
+      <!-- Donut Chart -->
+      <div class="relative shrink-0">
+        <svg id="donut-chart" width="100" height="100" viewBox="0 0 100 100" class="transform -rotate-90">
+          <circle
+            cx="50"
+            cy="50"
+            r="40"
+            fill="none"
+            stroke="var(--color-bg-secondary)"
+            stroke-width="14"
+          />
+          <!-- Segments will be added here by JS -->
+        </svg>
       </div>
-    </div>
-    
-    <!-- Legend -->
-    <div id="portfolio-legend" class="flex-1 space-y-2">
-      <div class="flex items-center gap-2 animate-pulse">
-        <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
-        <div class="h-4 w-24 rounded bg-[var(--color-bg-secondary)]"></div>
-      </div>
-      <div class="flex items-center gap-2 animate-pulse">
-        <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
-        <div class="h-4 w-20 rounded bg-[var(--color-bg-secondary)]"></div>
-      </div>
-      <div class="flex items-center gap-2 animate-pulse">
-        <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
-        <div class="h-4 w-16 rounded bg-[var(--color-bg-secondary)]"></div>
+      
+      <!-- Legend -->
+      <div id="portfolio-legend" class="flex-1 space-y-2">
+        <div class="flex items-center gap-2 animate-pulse">
+          <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
+          <div class="h-4 w-24 rounded bg-[var(--color-bg-secondary)]"></div>
+        </div>
+        <div class="flex items-center gap-2 animate-pulse">
+          <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
+          <div class="h-4 w-20 rounded bg-[var(--color-bg-secondary)]"></div>
+        </div>
+        <div class="flex items-center gap-2 animate-pulse">
+          <div class="size-3 rounded-full bg-[var(--color-bg-secondary)]"></div>
+          <div class="h-4 w-16 rounded bg-[var(--color-bg-secondary)]"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // Color palette for chart segments
-  const colors = [
-    '#3b82f6', // blue
-    '#f59e0b', // amber
-    '#10b981', // emerald
-    '#8b5cf6', // violet
-    '#ec4899', // pink
-    '#06b6d4', // cyan
-    '#f97316', // orange
-    '#84cc16', // lime
+  // Fallback color palette if asset doesn't have a color
+  const fallbackColors = [
+    '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899',
+    '#06b6d4', '#f97316', '#84cc16',
   ];
   
   function formatCurrency(value: number): string {
@@ -91,22 +88,22 @@
       existingSegments.forEach(el => el.remove());
       
       // Create donut segments
-      const circumference = 2 * Math.PI * 50; // radius = 50
+      const circumference = 2 * Math.PI * 40; // radius = 40
       let currentOffset = 0;
       
       assets.forEach((asset: any, index: number) => {
         const percentage = asset.percentage || 0;
         const segmentLength = (percentage / 100) * circumference;
-        const color = colors[index % colors.length];
+        const color = asset.color || fallbackColors[index % fallbackColors.length];
         
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('class', 'chart-segment');
-        circle.setAttribute('cx', '60');
-        circle.setAttribute('cy', '60');
-        circle.setAttribute('r', '50');
+        circle.setAttribute('cx', '50');
+        circle.setAttribute('cy', '50');
+        circle.setAttribute('r', '40');
         circle.setAttribute('fill', 'none');
         circle.setAttribute('stroke', color);
-        circle.setAttribute('stroke-width', '16');
+        circle.setAttribute('stroke-width', '14');
         circle.setAttribute('stroke-dasharray', `${segmentLength} ${circumference}`);
         circle.setAttribute('stroke-dashoffset', `-${currentOffset}`);
         circle.style.transition = 'stroke-dasharray 0.5s ease-out';
@@ -117,17 +114,17 @@
       
       // Update legend
       legend.innerHTML = assets.map((asset: any, index: number) => {
-        const color = colors[index % colors.length];
+        const color = asset.color || fallbackColors[index % fallbackColors.length];
         const percentage = (asset.percentage || 0).toFixed(1);
         return `
           <div class="flex items-center justify-between gap-2 text-sm">
             <div class="flex items-center gap-2">
-              <span class="size-3 shrink-0 rounded-full" style="background-color: ${color}"></span>
+              <span class="size-2.5 shrink-0 rounded-full" style="background-color: ${color}"></span>
               <span class="font-mono text-[var(--color-text)]">${asset.symbol}</span>
             </div>
-            <div class="text-right">
-              <span class="text-[var(--color-text-muted)]">${percentage}%</span>
-              <span class="ml-2 text-[var(--color-text-secondary)]">${formatCurrency(asset.value)}</span>
+            <div class="text-right font-mono">
+              <span class="text-[var(--color-text-muted)] text-xs">${percentage}%</span>
+              <span class="ml-2 text-[var(--color-text-secondary)] text-xs">${formatCurrency(asset.value)}</span>
             </div>
           </div>
         `;

@@ -6,15 +6,19 @@ holdings:
   # Individual major coins
   - symbol: "ETH"
     amount: 2.5
+    color: "#3b82f6"  # blue
   - symbol: "BTC"
     amount: 0.15
+    color: "#f59e0b"  # orange
   - id: "solana"
     symbol: "SOL"
     amount: 25
+    color: "#8b5cf6"  # purple
 
   # Grouped stablecoins - all valued at $1
   - group: "STABLES"
     stablecoin: true
+    color: "#10b981"  # green
     tokens:
       - symbol: "USDC"
         amount: 3000
@@ -25,6 +29,7 @@ holdings:
 
   # Grouped memecoins - fetched and summed together
   - group: "MEMES"
+    color: "#ec4899"  # pink
     tokens:
       - contract: "DtR4D9FtVoTX2569gaL837ZgrB6wNjj6tkmnX9Rdk9B2"
         chain: "solana"

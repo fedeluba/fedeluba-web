@@ -11,6 +11,7 @@ declare module '*/snapshots.yaml' {
     value: number;
     percentage: number;
     isGroup?: boolean;
+    color?: string;
   }
 
   interface Snapshot {
@@ -36,6 +37,7 @@ declare module '*/finances.yaml' {
     chain?: string;
     amount: number;
     stablecoin?: boolean;
+    color?: string;
   }
 
   interface GroupToken {
@@ -49,6 +51,7 @@ declare module '*/finances.yaml' {
     group: string;
     stablecoin?: boolean;
     tokens: GroupToken[];
+    color?: string;
   }
 
   type Holding = SingleHolding | GroupedHolding;
