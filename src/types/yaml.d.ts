@@ -3,6 +3,31 @@ declare module '*.yaml' {
   export default data;
 }
 
+declare module '*/snapshots.yaml' {
+  interface SnapshotAsset {
+    symbol: string;
+    amount: number;
+    price: number;
+    value: number;
+    percentage: number;
+    isGroup?: boolean;
+  }
+
+  interface Snapshot {
+    capturedAt: string;
+    isFirst?: boolean;
+    totalValue: number;
+    assets: SnapshotAsset[];
+  }
+
+  interface SnapshotsData {
+    [month: string]: Snapshot;
+  }
+
+  const data: SnapshotsData;
+  export default data;
+}
+
 declare module '*/finances.yaml' {
   interface SingleHolding {
     symbol?: string;

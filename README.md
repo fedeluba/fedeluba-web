@@ -1,43 +1,109 @@
-# Astro Starter Kit: Minimal
+# Fede's Personal Site
 
-```sh
-npm create astro@latest -- --template minimal
+## Commands
+
+```bash
+npm run dev       # Start dev server
+npm run build     # Build for production
+npm run snapshot  # Capture portfolio snapshot
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Content
 
-## 🚀 Project Structure
+### Add a New App
 
-Inside of your Astro project, you'll see the following folders and files:
+Create `content/apps/app-name.md`:
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```yaml
+---
+title: "App Name"
+description: "Short description"
+url: "https://app.com"
+image: "/images/apps/app-name.png"
+stack: ["React", "TypeScript"]
+featured: true
+order: 1
+---
+
+Optional markdown content here.
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Add the image to `public/images/apps/`.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+### Add a New Project
 
-Any static assets, like images, can be placed in the `public/` directory.
+Create `content/projects/project-name.md`:
 
-## 🧞 Commands
+```yaml
+---
+title: "Project Name"
+description: "Short description"
+url: "https://github.com/fedeluba/project"
+image: "/images/projects/project-name.png"
+stack: ["Flutter", "Dart"]
+featured: true
+order: 1
+---
+```
 
-All commands are run from the root of the project, from a terminal:
+### Add a Monthly Update
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+**On the 1st of each month:**
 
-## 👀 Want to learn more?
+1. Run `npm run snapshot` (or `npm run snapshot --first` for the very first one)
+2. Create `content/updates/YYYY-month.md`:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+```yaml
+---
+title: "January 2026 Update"
+date: 2026-01-01
+investedMoney: 1500
+defiIncome: 230
+highlights:
+  - "First highlight"
+  - "Second highlight"
+---
+
+Your monthly update content in markdown.
+```
+
+### Modify Holdings
+
+Edit `src/data/finances.yaml`:
+
+```yaml
+holdings:
+  # Individual coins
+  - symbol: "ETH"
+    amount: 2.5
+  
+  # Coin with custom CoinGecko ID
+  - id: "solana"
+    symbol: "SOL"
+    amount: 25
+  
+  # Grouped stablecoins (valued at $1)
+  - group: "STABLES"
+    stablecoin: true
+    tokens:
+      - symbol: "USDC"
+        amount: 3000
+  
+  # Grouped memecoins (fetched from Dexscreener)
+  - group: "MEMES"
+    tokens:
+      - contract: "0x..."
+        chain: "base"
+        symbol: "TOKEN"
+        amount: 5000
+```
+
+### Update History
+
+Add monthly totals to `src/data/finances.yaml` under `history`:
+
+```yaml
+history:
+  - month: "2026-01"
+    amount: 50000
+```

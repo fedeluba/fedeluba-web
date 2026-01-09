@@ -1,0 +1,304 @@
+---
+import snapshotsData from '../data/snapshots.yaml';
+
+interface SnapshotAsset {
+  symbol: string;
+  amount: number;
+  price: number;
+  value: number;
+  percentage: number;
+  isGroup?: boolean;
+}
+
+interface Snapshot {
+  capturedAt: string;
+  isFirst?: boolean;
+  totalValue: number;
+  assets: SnapshotAsset[];
+}
+
+interface Props {
+  month: string; // Format: "2026-01"
+}
+
+const { month } = Astro.props;
+
+const snapshots = snapshotsData as Record<string, Snapshot>;
+const currentSnapshot = snapshots[month];
+
+// Find previous month
+const [year, monthNum] = month.split('-').map(Number);
+const prevDate = new Date(year, monthNum - 2, 1); // -2 because months are 0-indexed and we want previous
+const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+const previousSnapshot = snapshots[prevMonth];
+
+const isFirstSnapshot = currentSnapshot?.isFirst || !previousSnapshot;
+
+// Calculate comparison data
+let valueChange = 0;
+let valueChangePercent = 0;
+let newAssets: string[] = [];
+let removedAssets: string[] = [];
+let allocationChanges: { symbol: string; current: number; previous: number; change: number; value: number; valueChange: number }[] = [];
+
+if (currentSnapshot && previousSnapshot && !isFirstSnapshot) {
+  valueChange = currentSnapshot.totalValue - previousSnapshot.totalValue;
+  valueChangePercent = (valueChange / previousSnapshot.totalValue) * 100;
+  
+  const prevSymbols = new Set(previousSnapshot.assets.map(a => a.symbol));
+  const currSymbols = new Set(currentSnapshot.assets.map(a => a.symbol));
+  
+  newAssets = currentSnapshot.assets
+    .filter(a => !prevSymbols.has(a.symbol))
+    .map(a => a.symbol);
+  
+  removedAssets = previousSnapshot.assets
+    .filter(a => !currSymbols.has(a.symbol))
+    .map(a => a.symbol);
+  
+  // Calculate allocation changes for existing assets
+  allocationChanges = currentSnapshot.assets
+    .filter(a => prevSymbols.has(a.symbol))
+    .map(curr => {
+      const prev = previousSnapshot.assets.find(p => p.symbol === curr.symbol)!;
+      return {
+        symbol: curr.symbol,
+        current: curr.percentage,
+        previous: prev.percentage,
+        change: curr.percentage - prev.percentage,
+        value: curr.value,
+        valueChange: curr.value - prev.value,
+      };
+    })
+    .sort((a, b) => b.value - a.value); // Sort by value instead of change
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const formatPercent = (value: number, showSign = false) => {
+  const sign = showSign && value > 0 ? '+' : '';
+  return `${sign}${value.toFixed(1)}%`;
+};
+
+// Color palette for chart
+const colors = [
+  '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899',
+  '#06b6d4', '#f97316', '#84cc16', '#ef4444', '#6366f1',
+];
+---
+
+{currentSnapshot ? (
+  <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden">
+    <!-- Header -->
+    <div class="px-5 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
+      <span class="text-sm text-[var(--color-text-muted)]">Portfolio Snapshot</span>
+      {!isFirstSnapshot && previousSnapshot ? (
+        <span class:list={[
+          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-mono font-medium",
+          valueChange >= 0
+            ? "bg-green-500/10 text-[var(--color-success)]"
+            : "bg-red-500/10 text-red-500"
+        ]}>
+          <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            {valueChange >= 0 ? (
+              <path d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            ) : (
+              <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            )}
+          </svg>
+          {valueChange >= 0 ? '+' : ''}{formatCurrency(valueChange)} ({formatPercent(valueChangePercent, true)})
+        </span>
+      ) : (
+        <span class="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2.5 py-1 rounded-full">
+          First Month
+        </span>
+      )}
+    </div>
+    
+    <div class="p-5 space-y-6">
+      {!isFirstSnapshot && previousSnapshot ? (
+        <!-- Comparison Mode -->
+        <Fragment>
+          <!-- Portfolio Value -->
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)] mb-1">Portfolio Value</p>
+            <p class="font-mono text-2xl font-semibold text-[var(--color-text)]">
+              {formatCurrency(currentSnapshot.totalValue)}
+            </p>
+            <p class="text-xs text-[var(--color-text-muted)] mt-1">
+              from {formatCurrency(previousSnapshot.totalValue)}
+            </p>
+          </div>
+          
+          <!-- Holdings Breakdown -->
+          {allocationChanges.length > 0 && (
+            <div>
+              <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Holdings Breakdown</p>
+              <div class="grid gap-4">
+                {allocationChanges.map((item, i) => (
+                  <div class="rounded-lg bg-[var(--color-bg)]/50 p-4">
+                    <!-- Header row -->
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span 
+                          class="size-3 rounded-full shrink-0" 
+                          style={`background-color: ${colors[i % colors.length]}`}
+                        />
+                        <span class="font-mono text-base font-medium text-[var(--color-text)]">{item.symbol}</span>
+                      </div>
+                      <span class="font-mono text-lg font-semibold text-[var(--color-text)]">
+                        {formatCurrency(item.value)}
+                      </span>
+                    </div>
+                    
+                    <!-- Progress bar -->
+                    <div class="h-2 bg-[var(--color-border)] rounded-full overflow-hidden mb-3">
+                      <div 
+                        class="h-full rounded-full transition-all duration-500"
+                        style={`width: ${item.current}%; background-color: ${colors[i % colors.length]}`}
+                      />
+                    </div>
+                    
+                    <!-- Stats row -->
+                    <div class="flex justify-between text-xs">
+                      <div>
+                        <span class="text-[var(--color-text-muted)]">Allocation: </span>
+                        <span class="font-mono text-[var(--color-text)]">{formatPercent(item.current)}</span>
+                        <span class:list={[
+                          "font-mono ml-1",
+                          item.change >= 0 ? "text-[var(--color-success)]" : "text-red-500"
+                        ]}>
+                          ({formatPercent(item.change, true)})
+                        </span>
+                      </div>
+                      {item.valueChange !== 0 && (
+                        <div>
+                          <span class="text-[var(--color-text-muted)]">Value change: </span>
+                          <span class:list={[
+                            "font-mono",
+                            item.valueChange >= 0 ? "text-[var(--color-success)]" : "text-red-500"
+                          ]}>
+                            {item.valueChange >= 0 ? '+' : ''}{formatCurrency(item.valueChange)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <!-- New Assets -->
+          {newAssets.length > 0 && (
+            <div>
+              <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-2">New Positions</p>
+              <div class="flex flex-wrap gap-2">
+                {newAssets.map(symbol => (
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-[var(--color-success)] text-sm font-mono">
+                    <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                    {symbol}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <!-- Removed Assets -->
+          {removedAssets.length > 0 && (
+            <div>
+              <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Closed Positions</p>
+              <div class="flex flex-wrap gap-2">
+                {removedAssets.map(symbol => (
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 text-sm font-mono">
+                    <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path d="M20 12H4" />
+                    </svg>
+                    {symbol}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </Fragment>
+      ) : (
+        <!-- First Snapshot Mode -->
+        <Fragment>
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)] mb-1">Starting Portfolio Value</p>
+            <p class="font-mono text-2xl font-semibold text-[var(--color-text)]">
+              {formatCurrency(currentSnapshot.totalValue)}
+            </p>
+          </div>
+          
+          <!-- Initial Distribution -->
+          <div>
+            <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider mb-4">Initial Distribution</p>
+            <div class="grid gap-4">
+              {currentSnapshot.assets.map((asset, i) => (
+                <div class="rounded-lg bg-[var(--color-bg)]/50 p-4">
+                  <!-- Header row -->
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <span 
+                        class="size-3 rounded-full shrink-0" 
+                        style={`background-color: ${colors[i % colors.length]}`}
+                      />
+                      <span class="font-mono text-base font-medium text-[var(--color-text)]">{asset.symbol}</span>
+                    </div>
+                    <span class="font-mono text-lg font-semibold text-[var(--color-text)]">
+                      {formatCurrency(asset.value)}
+                    </span>
+                  </div>
+                  
+                  <!-- Progress bar -->
+                  <div class="h-2 bg-[var(--color-border)] rounded-full overflow-hidden mb-3">
+                    <div 
+                      class="h-full rounded-full transition-all duration-500"
+                      style={`width: ${asset.percentage}%; background-color: ${colors[i % colors.length]}`}
+                    />
+                  </div>
+                  
+                  <!-- Stats row -->
+                  <div class="text-xs">
+                    <span class="text-[var(--color-text-muted)]">Allocation: </span>
+                    <span class="font-mono text-[var(--color-text)]">{formatPercent(asset.percentage)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Fragment>
+      )}
+      
+      <!-- Captured timestamp -->
+      <p class="text-xs text-[var(--color-text-muted)] pt-2 border-t border-[var(--color-border)]">
+        Snapshot taken {new Date(currentSnapshot.capturedAt).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}
+      </p>
+    </div>
+  </div>
+) : (
+  <div class="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card)]/50 p-5 text-center">
+    <p class="text-sm text-[var(--color-text-muted)]">
+      No snapshot available for this month.
+    </p>
+    <p class="text-xs text-[var(--color-text-muted)] mt-1">
+      Run <code class="bg-[var(--color-bg)] px-1.5 py-0.5 rounded font-mono">npm run snapshot</code> to capture one.
+    </p>
+  </div>
+)}

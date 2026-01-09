@@ -1,0 +1,67 @@
+# Portfolio snapshots - captured on the 1st of each month
+# Run `npm run snapshot` to add a new snapshot
+
+2025-12:
+  capturedAt: "2025-12-01T08:00:00Z"
+  isFirst: true
+  totalValue: 48500
+  assets:
+    - symbol: "BTC"
+      amount: 0.15
+      price: 85000
+      value: 12750
+      percentage: 26.3
+    - symbol: "ETH"
+      amount: 2.5
+      price: 2800
+      value: 7000
+      percentage: 14.4
+    - symbol: "SOL"
+      amount: 25
+      price: 120
+      value: 3000
+      percentage: 6.2
+    - symbol: "STABLES"
+      amount: 5000
+      price: 1
+      value: 5000
+      percentage: 10.3
+      isGroup: true
+    - symbol: "MEMES"
+      amount: 800000
+      price: 0.000025
+      value: 20
+      percentage: 0.04
+      isGroup: true
+
+2026-01:
+  capturedAt: "2026-01-01T08:00:00Z"
+  totalValue: 50000
+  assets:
+    - symbol: "BTC"
+      amount: 0.15
+      price: 90000
+      value: 13500
+      percentage: 27.0
+    - symbol: "ETH"
+      amount: 2.5
+      price: 3000
+      value: 7500
+      percentage: 15.0
+    - symbol: "SOL"
+      amount: 25
+      price: 130
+      value: 3250
+      percentage: 6.5
+    - symbol: "STABLES"
+      amount: 5000
+      price: 1
+      value: 5000
+      percentage: 10.0
+      isGroup: true
+    - symbol: "MEMES"
+      amount: 1200000
+      price: 0.00002
+      value: 24
+      percentage: 0.05
+      isGroup: true

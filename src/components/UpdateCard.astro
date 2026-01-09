@@ -32,7 +32,8 @@ const isPositiveInvestment = investedMoney >= 0;
 
 // Calculate portfolio performance % from history
 const history = (financesData as any).history as { month: string; amount: number }[];
-const updateMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+// Use UTC to avoid timezone issues with YAML date parsing
+const updateMonth = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 const sortedHistory = [...history].sort((a, b) => b.month.localeCompare(a.month));
 const currentMonthIndex = sortedHistory.findIndex(h => h.month === updateMonth);
 const currentMonthValue = currentMonthIndex >= 0 ? sortedHistory[currentMonthIndex].amount : null;

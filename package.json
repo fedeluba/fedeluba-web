@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "snapshot": "tsx scripts/snapshot.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
@@ -18,5 +19,9 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "tsx": "^4.19.0"
   }
 }
