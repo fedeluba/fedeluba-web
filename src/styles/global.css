@@ -1,0 +1,136 @@
+/* Custom fonts - Distinctive choices - Must be before other imports */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Satoshi:wght@400;500;700&display=swap');
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  /* Colors - Light theme */
+  --color-bg: #faf9f7;
+  --color-bg-secondary: #f0eeeb;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
+  --color-border: #e5e3df;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-success: #16a34a;
+  --color-card: #ffffff;
+  
+  /* Fonts */
+  --font-sans: 'Satoshi', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Spacing */
+  --spacing-page: clamp(1rem, 5vw, 3rem);
+  
+  /* Animation */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+}
+
+/* Dark theme */
+.dark {
+  --color-bg: #0f0f0f;
+  --color-bg-secondary: #1a1a1a;
+  --color-text: #f5f5f5;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #666666;
+  --color-border: #2a2a2a;
+  --color-accent: #60a5fa;
+  --color-accent-hover: #93c5fd;
+  --color-success: #4ade80;
+  --color-card: #161616;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  transition: background-color var(--duration-base) var(--ease-out-expo),
+              color var(--duration-base) var(--ease-out-expo);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration-color: var(--color-text-muted);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration-base) var(--ease-out-expo);
+}
+
+a:hover {
+  text-decoration-color: var(--color-text);
+}
+
+/* View Transitions */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-slow);
+  animation-timing-function: var(--ease-out-expo);
+}
+
+/* Smooth element transitions */
+.transition-base {
+  transition: all var(--duration-base) var(--ease-out-expo);
+}
+
+.transition-slow {
+  transition: all var(--duration-slow) var(--ease-out-expo);
+}
+
+/* Stagger animation for lists */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* Progress bar animation */
+@keyframes growWidth {
+  from {
+    width: 0;
+  }
+}
+
+.animate-grow-width {
+  animation: growWidth 1s var(--ease-out-expo) 0.3s both;
+}

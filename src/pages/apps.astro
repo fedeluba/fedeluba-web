@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import AppCard from '../components/AppCard.astro';
+
+const allApps = await getCollection('apps');
+const sortedApps = allApps.sort((a, b) => {
+  // Featured apps first, then by order
+  if (a.data.featured !== b.data.featured) {
+    return a.data.featured ? -1 : 1;
+  }
+  return a.data.order - b.data.order;
+});
+---
+
+<Base title="Apps" description="Apps I've built on my journey to financial freedom">
+  <section class="animate-fade-in-up">
+    <h1 class="text-4xl md:text-5xl tracking-tight">Apps</h1>
+    <p class="mt-4 text-lg text-[var(--color-text-secondary)] leading-relaxed max-w-lg">
+      A collection of apps I've built. Each one teaches me something new and 
+      hopefully helps others along the way.
+    </p>
+  </section>
+
+  <section class="mt-12">
+    {sortedApps.length > 0 ? (
+      <div class="grid gap-4">
+        {sortedApps.map((app, index) => (
+          <AppCard
+            title={app.data.title}
+            description={app.data.description}
+            url={app.data.url}
+            image={app.data.image}
+            stack={app.data.stack}
+            index={index}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-[var(--color-text-muted)] italic">
+        No apps yet. Check back soon!
+      </p>
+    )}
+  </section>
+</Base>

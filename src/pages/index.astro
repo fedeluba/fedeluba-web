@@ -1,0 +1,82 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import AppCard from '../components/AppCard.astro';
+import UpdateCard from '../components/UpdateCard.astro';
+import InvestedMoneyChart from '../components/InvestedMoneyChart.astro';
+
+const allApps = await getCollection('apps');
+const featuredApps = allApps
+  .filter(app => app.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+
+const allUpdates = await getCollection('updates');
+const latestUpdate = allUpdates
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())[0];
+---
+
+<Base title="Home">
+  <!-- Hero Section -->
+  <section class="mb-16 animate-fade-in-up">
+    <h1 class="text-4xl md:text-5xl tracking-tight">
+      Hey, I'm <em>Fede</em>
+    </h1>
+    <p class="mt-4 text-lg text-[var(--color-text-secondary)] leading-relaxed max-w-lg">
+      I build apps, and invest in crypto & DeFi while documenting my journey toward $1,000,000 invested.
+    </section>
+
+  <!-- Invested Money Section -->
+  <section class="mb-16 animate-fade-in-up" style="animation-delay: 100ms">
+    <InvestedMoneyChart />
+  </section>
+
+  <!-- Featured Apps Section -->
+  {featuredApps.length > 0 && (
+    <section class="mb-16">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-sm font-sans font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+          Featured Apps
+        </h2>
+        <a href="/apps" class="text-sm text-[var(--color-accent)] hover:underline">
+          View all →
+        </a>
+      </div>
+      <div class="grid gap-4">
+        {featuredApps.map((app, index) => (
+          <AppCard
+            title={app.data.title}
+            description={app.data.description}
+            url={app.data.url}
+            image={app.data.image}
+            stack={app.data.stack}
+            index={index}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Latest Update Section -->
+  {latestUpdate && (
+    <section>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-sm font-sans font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+          Latest Update
+        </h2>
+        <a href="/updates" class="text-sm text-[var(--color-accent)] hover:underline">
+          View all →
+        </a>
+      </div>
+      <UpdateCard
+        title={latestUpdate.data.title}
+        date={latestUpdate.data.date}
+        investedMoney={latestUpdate.data.investedMoney}
+        defiIncome={latestUpdate.data.defiIncome}
+        highlights={latestUpdate.data.highlights}
+        slug={latestUpdate.id}
+        index={0}
+      />
+    </section>
+  )}
+</Base>

@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import UpdateCard from '../../components/UpdateCard.astro';
+
+const allUpdates = await getCollection('updates');
+const sortedUpdates = allUpdates.sort((a, b) => 
+  b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<Base title="Monthly Updates" description="Monthly updates on my journey to financial freedom">
+  <section class="animate-fade-in-up">
+    <h1 class="text-4xl md:text-5xl tracking-tight">Updates</h1>
+    <p class="mt-4 text-lg text-[var(--color-text-secondary)] leading-relaxed max-w-lg">
+      Monthly reflections on my progress, investments, and what I've learned 
+      along the way.
+    </p>
+  </section>
+
+  <section class="mt-12">
+    {sortedUpdates.length > 0 ? (
+      <div class="grid gap-4">
+        {sortedUpdates.map((update, index) => (
+          <UpdateCard
+            title={update.data.title}
+            date={update.data.date}
+            investedMoney={update.data.investedMoney}
+            defiIncome={update.data.defiIncome}
+            highlights={update.data.highlights}
+            slug={update.id}
+            index={index}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="text-[var(--color-text-muted)] italic">
+        No updates yet. Check back soon!
+      </p>
+    )}
+  </section>
+</Base>

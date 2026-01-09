@@ -1,0 +1,46 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/apps', label: 'Apps' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/updates', label: 'Updates' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="mb-16 flex items-center justify-between">
+  <a href="/" class="group flex items-center gap-3 no-underline">
+    <div class="relative size-10 overflow-hidden rounded-full ring-2 ring-[var(--color-border)] transition-base group-hover:ring-[var(--color-accent)]">
+      <img 
+        src="/images/avatar.png" 
+        alt="Fede" 
+        class="size-full object-cover"
+      />
+    </div>
+    <span class="font-medium tracking-tight">Fede</span>
+  </a>
+  
+  <nav class="flex items-center gap-1">
+    {navLinks.map(({ href, label }) => {
+      const isActive = currentPath === href || (href !== '/' && currentPath.startsWith(href));
+      return (
+        <a 
+          href={href}
+          class:list={[
+            "px-3 py-1.5 text-sm rounded-md transition-base no-underline",
+            isActive 
+              ? "bg-[var(--color-bg-secondary)] text-[var(--color-text)]" 
+              : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)]"
+          ]}
+        >
+          {label}
+        </a>
+      );
+    })}
+    <div class="ml-2 h-4 w-px bg-[var(--color-border)]" />
+    <ThemeToggle />
+  </nav>
+</header>
